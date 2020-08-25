@@ -23,29 +23,6 @@ $ gradle clean build bootRun
 http://localhost:9994/swagger-ui.html
 ```
 
-## Rest services
-
-```
-POST
-http://localhost:9994/service/redis/message
-
-{
-   "messageId": "messageId",
-   "description": "description",
-   "groupId": "groupId",
-}
-```
-
-```
-GET
-http://localhost:9994/service/redis/message/{messageId}
-```
-
-```
-GET
-http://localhost:9994/service/redis/messages
-```
-
 [travis-image]: https://travis-ci.org/yadickson/test-spring-boot-redis.svg?branch=master
 [travis-url]: https://travis-ci.org/yadickson/test-spring-boot-redis
 
