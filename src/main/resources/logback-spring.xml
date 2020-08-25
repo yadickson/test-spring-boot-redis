@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <include resource="org/springframework/boot/logging/logback/base.xml" />
+
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" />
+
+    <variable name="APP_LOG_LEVEL" value="${LOG_LEVEL:-DEBUG}" />
+    
+    <property name="APP_LOG_DIR" value="${LOG_DIR:-${java.io.tmpdir:-/tmp}/logs/${APP_NAME}}" />
+    
+    <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${APP_LOG_DIR}/${APP_NAME}.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${APP_LOG_DIR}/${APP_NAME}.json.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <totalSizeCap>20GB</totalSizeCap>
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder" >
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "level": "%level",
+                        "service": "${APP_NAME}",
+                        "trace": "%X{X-B3-TraceId:-}",
+                        "span": "%X{X-B3-SpanId:-}",
+                        "parent": "%X{X-B3-ParentSpanId:-}",
+                        "exportable": "%X{X-Span-Export:-}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger{40}",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+        
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${APP_LOG_LEVEL}</level>
+        </filter>
+
+    </appender>
+
+    <logger name="cl.github.yadickson.logger" additivity="false">
+        <appender-ref ref="FILE-ROLLING"/>
+    </logger>   
+
+</configuration>
