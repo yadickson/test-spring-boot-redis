@@ -66,7 +66,7 @@ public class RedisControllerTest {
 
         MessageModel messageMock = new MessageModel();
 
-        messageMock.setMessageId("messageIdMock");
+        messageMock.setId("messageIdMock");
         messageMock.setDescription("descriptionMock");
         messageMock.setGroupId("groupIdMock");
 
@@ -78,7 +78,7 @@ public class RedisControllerTest {
         mvc.perform(MockMvcRequestBuilders.get(uriComponents.toUriString())
                 .contentType(MediaType.TEXT_PLAIN))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasEntry("messageId", "messageIdMock")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasEntry("id", "messageIdMock")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasEntry("description", "descriptionMock")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasEntry("groupId", "groupIdMock")));
 

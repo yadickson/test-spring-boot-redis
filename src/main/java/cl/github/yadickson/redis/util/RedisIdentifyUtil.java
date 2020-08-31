@@ -13,11 +13,26 @@ package cl.github.yadickson.redis.util;
 public interface RedisIdentifyUtil {
 
     /**
+     * Build message identify.
+     *
+     * @param messageId the message's identify.
+     * @return the new group's identify
+     */
+    String buildMessageId(String messageId);
+
+    /**
      * Build group identify.
      *
-     * @param key the redis key.
      * @param groupId the group's identify.
      * @return the new group's identify
      */
-    String build(String key, String groupId);
+    String buildGroupId(String groupId);
+
+    /**
+     * Build find group identify pattern.
+     *
+     * @param groupId the group's identify.
+     * @return the find identify pattern
+     */
+    String findGroupId(String groupId);
 }

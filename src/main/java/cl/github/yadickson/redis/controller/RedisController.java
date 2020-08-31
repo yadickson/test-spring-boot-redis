@@ -11,7 +11,6 @@ import cl.github.yadickson.redis.service.RedisService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -67,7 +66,8 @@ public final class RedisController {
     @GetMapping(value = "/messages")
     @ResponseBody
     public ResponseEntity<List<MessageModel>> getMessagesByGroupId(
-            @RequestParam(name = "groupId", required = false) final String groupId) {
+            @RequestParam(name = "groupId", required = false)
+            final String groupId) {
         return ResponseEntity.ok(service.getAllMessagesByGroupId(groupId));
     }
 }

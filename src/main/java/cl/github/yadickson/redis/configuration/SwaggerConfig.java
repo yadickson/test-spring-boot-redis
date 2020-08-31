@@ -30,7 +30,7 @@ public class SwaggerConfig {
     /**
      * Path base.
      */
-    private final static String BASE_PACKAGE = "cl.github.yadickson.redis";
+    private static final String BASE_PACKAGE = "cl.github.yadickson.redis";
 
     /**
      * Build swagger documentation.
@@ -38,9 +38,11 @@ public class SwaggerConfig {
      * @return documentation.
      */
     @Bean
+    @SuppressWarnings({"rawtypes"})
     public Docket productApi() {
 
         List<VendorExtension> vendorExtensions = new ArrayList<>();
+
         ApiInfo apiInfo = new ApiInfo(
                 "Spring Boot Redis  Example API",
                 "Spring Boot redis",

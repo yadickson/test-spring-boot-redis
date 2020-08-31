@@ -16,12 +16,13 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@SuppressWarnings({"serial"})
 public final class MessageModel implements Serializable {
 
     /**
      * The message's identification.
      */
-    private String messageId;
+    private String id;
 
     /**
      * The description of the message.

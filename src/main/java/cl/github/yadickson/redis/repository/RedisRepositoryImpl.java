@@ -7,11 +7,18 @@ package cl.github.yadickson.redis.repository;
 
 import cl.github.yadickson.redis.model.MessageModel;
 import cl.github.yadickson.redis.util.RedisIdentifyUtil;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -21,11 +28,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class RedisRepositoryImpl implements RedisRepository {
-
-    /**
-     * Hash by identify key.
-     */
-    private final static String REDIS_KEY = "messages";
 
     /**
      * Redis template.
@@ -45,17 +47,27 @@ public class RedisRepositoryImpl implements RedisRepository {
      */
     @Override
     public void save(final MessageModel message) {
-        final String newId = utility.build(REDIS_KEY, message.getGroupId());
+        final String messageId = utility.buildMessageId(message.getId());
+        final String groupId = utility.buildGroupId(message.getGroupId());
 
-        redisTemplate.opsForHash()
-                .put(REDIS_KEY, message.getMessageId(), message);
+        redisTemplate
+                .opsForValue()
+                .set(messageId, message);
 
-        redisTemplate.opsForHash()
-                .put(newId, message.getMessageId(), message);
+        redisTemplate
+                .opsForHash()
+                .put(groupId, message.getId(), message);
 
-        // Date expireAt = Date.from(LocalDateTime.now().with(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant());
-        // redisTemplate.expireAt(groupId, expireAt);
-        // redisTemplate.expire(REDIS_KEY, 10L, TimeUnit.of(ChronoUnit.SECONDS));
+        Date expireAt = Date.from(
+                LocalDateTime
+                        .now()
+                        .with(LocalTime.MAX)
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+        );
+
+        redisTemplate.expireAt(messageId, expireAt);
+        redisTemplate.expireAt(groupId, expireAt);
     }
 
     /**
@@ -71,7 +83,8 @@ public class RedisRepositoryImpl implements RedisRepository {
      */
     @Override
     public Boolean existsById(final String messageId) {
-        return redisTemplate.opsForHash().hasKey(REDIS_KEY, messageId);
+        final String keyId = utility.buildMessageId(messageId);
+        return redisTemplate.hasKey(keyId);
     }
 
     /**
@@ -79,8 +92,8 @@ public class RedisRepositoryImpl implements RedisRepository {
      */
     @Override
     public MessageModel findById(final String messageId) {
-        return (MessageModel) redisTemplate.opsForHash()
-                .get(REDIS_KEY, messageId);
+        final String keyId = utility.buildMessageId(messageId);
+        return redisTemplate.opsForValue().get(keyId);
     }
 
     /**
@@ -88,8 +101,8 @@ public class RedisRepositoryImpl implements RedisRepository {
      */
     @Override
     public Boolean existsByGroupId(final String groupId) {
-        final String newId = utility.build(REDIS_KEY, groupId);
-        return redisTemplate.hasKey(newId);
+        final String keyId = utility.buildGroupId(groupId);
+        return redisTemplate.hasKey(keyId);
     }
 
     /**
@@ -99,14 +112,27 @@ public class RedisRepositoryImpl implements RedisRepository {
     public List<MessageModel> findAllByGroupId(final String groupId) {
 
         List<MessageModel> messages = new ArrayList<>();
-        final String newId = utility.build(REDIS_KEY, groupId);
+        final String patternId = utility.findGroupId(groupId);
 
-        redisTemplate.opsForHash()
-                .entries(newId)
-                .values()
-                .stream()
-                .map(x -> (MessageModel) x)
-                .forEach(messages::add);
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(patternId)
+                .build();
+
+        final Cursor<byte[]> scan = redisTemplate
+                .getConnectionFactory()
+                .getConnection()
+                .scan(options);
+
+        while (scan.hasNext()) {
+            byte[] next = scan.next();
+            String keyId = new String(next, StandardCharsets.UTF_8);
+
+            redisTemplate.opsForHash()
+                    .values(keyId)
+                    .stream()
+                    .map(x -> (MessageModel) x)
+                    .forEach(messages::add);
+        }
 
         return messages;
     }
